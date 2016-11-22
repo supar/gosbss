@@ -38,7 +38,7 @@ type AuthRequest struct {
 }
 
 // Create new http client
-func NewClient() (c *Client, err error) {
+func NewClient() (c *Client) {
 	c = &Client{
 		Client:    &http.Client{},
 		UserAgent: "Sbss-Client",

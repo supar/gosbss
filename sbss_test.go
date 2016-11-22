@@ -47,7 +47,7 @@ func Test_LoginAuthStruct(t *testing.T) {
 
 func Test_CheckUserAgentHeader(t *testing.T) {
 	var (
-		cli, _ = NewClient()
+		cli = NewClient()
 
 		err error
 		r   *http.Request
@@ -74,8 +74,8 @@ func Test_CheckUserAgentHeader(t *testing.T) {
 
 func Test_ReadResponseWithInvalidLeadingCharacters(t *testing.T) {
 	var (
-		cli, _ = NewClient()
-		a      = []struct {
+		cli = NewClient()
+		a   = []struct {
 			in, out []byte
 		}{
 			{
@@ -146,9 +146,9 @@ func Test_AuthKeyValid(t *testing.T) {
 
 func Test_AuthenticationStatusSuccess(t *testing.T) {
 	var (
-		cli, _ = NewClient()
-		lauth  = NewAuthRequest("user1", "")
-		r      = &AuthResponse{}
+		cli   = NewClient()
+		lauth = NewAuthRequest("user1", "")
+		r     = &AuthResponse{}
 
 		err error
 		res *http.Response
@@ -182,9 +182,9 @@ func Test_AuthenticationStatusSuccess(t *testing.T) {
 
 func Test_AuthenticationStatusFail(t *testing.T) {
 	var (
-		cli, _ = NewClient()
-		lauth  = NewAuthRequest("user1", "password1")
-		r      = &AuthResponse{}
+		cli   = NewClient()
+		lauth = NewAuthRequest("user1", "password1")
+		r     = &AuthResponse{}
 
 		err error
 		res *http.Response
@@ -216,9 +216,9 @@ func Test_AuthenticationStatusFail(t *testing.T) {
 
 func Test_LoginSuccess(t *testing.T) {
 	var (
-		cli, _ = NewClient()
-		lauth  = NewAuthRequest("user1", "password1")
-		c      = "85c0f07a48e711b8c91923f3b6779e737f7e39cc"
+		cli   = NewClient()
+		lauth = NewAuthRequest("user1", "password1")
+		c     = "85c0f07a48e711b8c91923f3b6779e737f7e39cc"
 
 		err error
 	)
