@@ -218,7 +218,7 @@ func Test_LoginSuccess(t *testing.T) {
 	var (
 		cli   = NewClient()
 		lauth = NewAuthRequest("user1", "password1")
-		c     = "85c0f07a48e711b8c91923f3b6779e737f7e39cc"
+		c     = "ccebf1b64e210b61ba63b6475d5c80d4ff0b09c8"
 
 		err error
 	)
