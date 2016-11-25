@@ -136,7 +136,7 @@ func Test_AuthKeyValid(t *testing.T) {
 			Password: "password1",
 		}
 		c int64 = 7374616523
-		r       = "5c00a9b7b6cf5b0dc4f79ecac1976bcbe8dbe1e9"
+		r       = "bc474ed96e52bd6de501060ece3f6f334cc42db7"
 	)
 
 	if res := authKey(a, c); res != r {

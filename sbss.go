@@ -196,9 +196,9 @@ func authKey(auth *AuthRequest, ch int64) string {
 		s1 = sha1.New()
 	)
 
-	io.WriteString(m5, auth.Login)
 	io.WriteString(m5, auth.Password)
 
+	io.WriteString(s1, auth.Login)
 	io.WriteString(s1, hex.EncodeToString(m5.Sum(nil)))
 	io.WriteString(s1, strconv.FormatInt(ch, 10))
 
