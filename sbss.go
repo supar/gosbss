@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-querystring/query"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strconv"
 )
@@ -39,8 +40,16 @@ type AuthRequest struct {
 
 // Create new http client
 func NewClient() (c *Client) {
+	var (
+		cookie *cookiejar.Jar
+	)
+
+	cookie, _ = cookiejar.New(nil)
+
 	c = &Client{
-		Client:    &http.Client{},
+		Client: &http.Client{
+			Jar: cookie,
+		},
 		UserAgent: "Sbss-Client",
 	}
 
