@@ -225,7 +225,7 @@ func Test_LoginSuccess(t *testing.T) {
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.PostFormValue("login") == lauth.Login && r.PostFormValue("authorize") == c {
-			io.WriteString(w, `({"success":true})`)
+			io.WriteString(w, `({ success: true })`)
 
 			return
 		}
@@ -242,5 +242,55 @@ func Test_LoginSuccess(t *testing.T) {
 
 	if !cli.authorized {
 		t.Error("Expected authorized:true in the struct")
+	}
+}
+
+func Test_ApiKeySuccess(t *testing.T) {
+	var (
+		cli = NewClient()
+
+		authRes    = &AuthResponse{}
+		user       = "user1"
+		cookieName = "be6657bf2d3271ef"
+		key        = user + ":0:9174f402ddc2923037e23c094175a495f3cbc19d"
+
+		r   *http.Request
+		res *http.Response
+		err error
+	)
+
+	cli.SetApiKey(user, cookieName, key)
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if h := r.Header.Get("X-Sbss-Auth"); h != user {
+			io.WriteString(w, `({"success":false,"authorize":false,"login":null,"challenge":5698317,"cname":"3b47a663b0765fe1"})`)
+			return
+		}
+
+		if c, _ := r.Cookie(cookieName); c == nil || c.Value != key {
+			io.WriteString(w, `({"success":false,"authorize":false,"login":null,"challenge":5698317,"cname":"3b47a663b0765fe1"})`)
+			return
+		}
+
+		io.WriteString(w, `({"success":true})`)
+	})
+
+	ts := NewTestServer(handler)
+	defer ts.Close()
+
+	if r, err = cli.NewRequest("GET", ts.URL, nil); err != nil {
+		t.Error(err)
+	}
+
+	if res, err = cli.Do(r); err != nil {
+		t.Error(err)
+	}
+
+	if err = ReadResponse(res, authRes); err != nil || !authRes.Success {
+		if err == nil {
+			t.Error("Unauthorized")
+		} else {
+			t.Error(err)
+		}
 	}
 }

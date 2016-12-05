@@ -16,6 +16,11 @@ import (
 	"strconv"
 )
 
+type ApiKeyData struct {
+	Login  string
+	Cookie *http.Cookie
+}
+
 type AuthResponse struct {
 	Success   bool   `json:"success"`
 	Authorize bool   `json:"authorized"`
@@ -24,18 +29,19 @@ type AuthResponse struct {
 	Cname     string `json:"cname"`
 }
 
-type Client struct {
-	*http.Client
-	authorized bool
-	UserAgent  string
-}
-
 type AuthRequest struct {
 	Async     uint   `url:"async"`
 	Authorize string `url:"authorize"`
 	Login     string `url:"login"`
 	Password  string `url:"-"`
 	Remember  uint   `url:"remember"`
+}
+
+type Client struct {
+	*http.Client
+	ApiKey     *ApiKeyData
+	authorized bool
+	UserAgent  string
 }
 
 // Create new http client
@@ -56,7 +62,7 @@ func NewClient() (c *Client) {
 	return
 }
 
-// Authenticate manager
+// Authenticate manager by login/password
 func (this *Client) Login(urlStr string, auth *AuthRequest) (err error) {
 	var (
 		res    *http.Response
@@ -103,6 +109,17 @@ func (this *Client) Login(urlStr string, auth *AuthRequest) (err error) {
 	return
 }
 
+// Add API key settings
+func (this *Client) SetApiKey(login, cookieName, key string) {
+	this.ApiKey = &ApiKeyData{
+		Login: login,
+		Cookie: &http.Cookie{
+			Name:  cookieName,
+			Value: key,
+		},
+	}
+}
+
 // Check if auithorized
 func (this *Client) authRequest(urlStr string, auth *AuthRequest) (res *http.Response, err error) {
 	var (
@@ -142,6 +159,11 @@ func (this *Client) NewRequest(method, urlStr string, body io.Reader) (r *http.R
 	r.Header.Set("User-Agent", this.UserAgent)
 	r.Header.Set("X-Requested-With", "XMLHttpRequest")
 
+	if this.ApiKey != nil {
+		r.Header.Set("X-Sbss-Auth", this.ApiKey.Login)
+		r.AddCookie(this.ApiKey.Cookie)
+	}
+
 	if method == "POST" {
 		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
@@ -149,6 +171,7 @@ func (this *Client) NewRequest(method, urlStr string, body io.Reader) (r *http.R
 	return
 }
 
+// Create authentication request
 func NewAuthRequest(login, password string) *AuthRequest {
 	return &AuthRequest{
 		Async:     1,
