@@ -225,7 +225,7 @@ func Test_LoginSuccess(t *testing.T) {
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.PostFormValue("login") == lauth.Login && r.PostFormValue("authorize") == c {
-			io.WriteString(w, `({ success: true })`)
+			io.WriteString(w, `({"success": true})`)
 
 			return
 		}
