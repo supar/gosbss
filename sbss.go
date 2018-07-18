@@ -16,11 +16,17 @@ import (
 	"strconv"
 )
 
+// ApiKeyData is struct to authenticate by login
+// in the header and cookie as a key
+//
+// Is alternative to the classic login action
 type ApiKeyData struct {
 	Login  string
 	Cookie *http.Cookie
 }
 
+// AuthResponse represents default response from
+// the CRM server
 type AuthResponse struct {
 	Success   bool   `json:"success"`
 	Authorize bool   `json:"authorized"`
@@ -29,6 +35,8 @@ type AuthResponse struct {
 	Cname     string `json:"cname"`
 }
 
+// AuthRequest represents form encoded request to
+// authenticate user
 type AuthRequest struct {
 	Async     uint   `url:"async"`
 	Authorize string `url:"authorize"`
@@ -37,13 +45,16 @@ type AuthRequest struct {
 	Remember  uint   `url:"remember"`
 }
 
+// Client extends default http.Client with
+// API key data and user agent information
 type Client struct {
 	*http.Client
 	ApiKey    *ApiKeyData
 	UserAgent string
 }
 
-// Create new http client
+// NewClient returns a new Client
+// with defined cookie jar and user agent name
 func NewClient() (c *Client) {
 	var (
 		cookie *cookiejar.Jar
@@ -61,14 +72,15 @@ func NewClient() (c *Client) {
 	return
 }
 
-// Authenticate manager by login/password
-func (this *Client) Login(urlStr string, auth *AuthRequest) (err error) {
+// Login is default authentication algorithm, retrieves challenge sign
+// from CRM response and send back authentication by login and password
+func (c *Client) Login(urlStr string, auth *AuthRequest) (err error) {
 	var (
 		res    *http.Response
 		result *AuthResponse
 	)
 
-	if res, err = this.authRequest(urlStr, auth); err != nil {
+	if res, err = c.authRequest(urlStr, auth); err != nil {
 		return err
 	}
 
@@ -85,7 +97,7 @@ func (this *Client) Login(urlStr string, auth *AuthRequest) (err error) {
 	// Otherwise send authentication
 	// Create login with challenge
 	auth.Authorize = authKey(auth, result.Challenge)
-	if res, err = this.authRequest(urlStr, auth); err != nil {
+	if res, err = c.authRequest(urlStr, auth); err != nil {
 		return err
 	}
 	auth.Authorize = auth.Login
@@ -102,9 +114,9 @@ func (this *Client) Login(urlStr string, auth *AuthRequest) (err error) {
 	return
 }
 
-// Add API key settings
-func (this *Client) SetApiKey(login, cookieName, key string) {
-	this.ApiKey = &ApiKeyData{
+// SetApiKey returns ApiKeyData given login, cookie name and cookie value
+func (c *Client) SetApiKey(login, cookieName, key string) {
+	c.ApiKey = &ApiKeyData{
 		Login: login,
 		Cookie: &http.Cookie{
 			Name:  cookieName,
@@ -113,8 +125,8 @@ func (this *Client) SetApiKey(login, cookieName, key string) {
 	}
 }
 
-// Check if auithorized
-func (this *Client) authRequest(urlStr string, auth *AuthRequest) (res *http.Response, err error) {
+// Check if authorized
+func (c *Client) authRequest(urlStr string, auth *AuthRequest) (res *http.Response, err error) {
 	var (
 		data *bytes.Buffer
 		req  *http.Request
@@ -131,30 +143,38 @@ func (this *Client) authRequest(urlStr string, auth *AuthRequest) (res *http.Res
 	// Prepare request just with login field
 	// to check if connection is authorized
 	// otherwise server will return challenge to authenticate
-	if req, err = this.NewRequest("POST", urlStr, data); err != nil {
+	if req, err = c.NewRequest("POST", urlStr, data); err != nil {
 		return nil, err
 	}
 
 	// Send request
-	if res, err = this.Do(req); err != nil {
+	if res, err = c.Do(req); err != nil {
 		return nil, err
 	}
 
 	return
 }
 
-// Override NewRequest to add User_agent header
-func (this *Client) NewRequest(method, urlStr string, body io.Reader) (r *http.Request, err error) {
+// NewRequest returns a new Request given a method, URL, and optional body
+//
+// NewRequest extends default http.NewRequest method with defined User-Agent and
+// X-Requested-With headers
+//
+// If there is defined ApiKeyData than it will be added authentication headers
+//
+// CRM has recieve x-www-form-urlencoded data by POST method, so if method POST header
+// Content-Type will be added
+func (c *Client) NewRequest(method, urlStr string, body io.Reader) (r *http.Request, err error) {
 	if r, err = http.NewRequest(method, urlStr, body); err != nil {
 		return
 	}
 
-	r.Header.Set("User-Agent", this.UserAgent)
+	r.Header.Set("User-Agent", c.UserAgent)
 	r.Header.Set("X-Requested-With", "XMLHttpRequest")
 
-	if this.ApiKey != nil {
-		r.Header.Set("X-Sbss-Auth", this.ApiKey.Login)
-		r.AddCookie(this.ApiKey.Cookie)
+	if c.ApiKey != nil {
+		r.Header.Set("X-Sbss-Auth", c.ApiKey.Login)
+		r.AddCookie(c.ApiKey.Cookie)
 	}
 
 	if method == "POST" {
@@ -164,7 +184,7 @@ func (this *Client) NewRequest(method, urlStr string, body io.Reader) (r *http.R
 	return
 }
 
-// Create authentication request
+// NewAuthRequest returns AuthRequest given login and password
 func NewAuthRequest(login, password string) *AuthRequest {
 	return &AuthRequest{
 		Async:     1,
@@ -175,7 +195,7 @@ func NewAuthRequest(login, password string) *AuthRequest {
 	}
 }
 
-// Encode struct to the form-data
+// EncodeForm
 func EncodeForm(data interface{}) (buf *bytes.Buffer, err error) {
 	var (
 		v url.Values
