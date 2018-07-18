@@ -39,9 +39,8 @@ type AuthRequest struct {
 
 type Client struct {
 	*http.Client
-	ApiKey     *ApiKeyData
-	authorized bool
-	UserAgent  string
+	ApiKey    *ApiKeyData
+	UserAgent string
 }
 
 // Create new http client
@@ -69,10 +68,6 @@ func (this *Client) Login(urlStr string, auth *AuthRequest) (err error) {
 		result *AuthResponse
 	)
 
-	if this.authorized {
-		return
-	}
-
 	if res, err = this.authRequest(urlStr, auth); err != nil {
 		return err
 	}
@@ -84,7 +79,6 @@ func (this *Client) Login(urlStr string, auth *AuthRequest) (err error) {
 
 	// Connection is authorized
 	if result.Success {
-		this.authorized = true
 		return nil
 	}
 
@@ -105,7 +99,6 @@ func (this *Client) Login(urlStr string, auth *AuthRequest) (err error) {
 		err = errors.New("Not authorized")
 	}
 
-	this.authorized = true
 	return
 }
 

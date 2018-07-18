@@ -239,10 +239,6 @@ func Test_LoginSuccess(t *testing.T) {
 	if err = cli.Login(ts.URL, lauth); err != nil {
 		t.Error(err)
 	}
-
-	if !cli.authorized {
-		t.Error("Expected authorized:true in the struct")
-	}
 }
 
 func Test_ApiKeySuccess(t *testing.T) {
